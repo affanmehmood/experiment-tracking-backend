@@ -1,0 +1,91 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+.Python
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Environments
+.env
+.env.*
+
+# Python distribution / packaging
+build/
+develop-eggs/
+dist/
+eggs/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# mypy
+.mypy_cache/
+
+# pytest
+.cache/
+.pytest_cache/
+
+# coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Database
+*.sqlite3
+
+# Static/media/uploads (optional - adjust for your app)
+uploads/
+media/
+staticfiles/
+
+# Uvicorn/Starlette reload file
+.reload
+
+# Local config
+*.local
+*.bak
+
+# Docker (if using)
+*.pid
+*.tar
+docker-compose.override.yml
+
+# Node.js frontend (if full stack)
+node_modules/
+dist/
+build/
+
+# Editor backups
+*~
+*.swp
+*.swo
