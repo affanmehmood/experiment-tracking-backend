@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User, Experiment, Metric, ModelFile
-import uuid, shutil
+import uuid, shutil, os
 
 
 router = APIRouter(tags=["Uploads"])
@@ -45,7 +45,14 @@ def upload_model(experiment_id: int, file: UploadFile = File(...), x_api_key: st
     experiment = db.query(Experiment).filter_by(id=experiment_id, user_id=user.id).first()
     if not experiment:
         raise HTTPException(status_code=404, detail="Experiment not found")
+
     file_location = f"models/{experiment_id}_{file.filename}"
+    # Extract the directory part of the file path
+    directory = os.path.dirname(file_location)
+
+    # Create the directory (and all intermediate directories) if they don't exist
+    os.makedirs(directory, exist_ok=True)
+
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     model_file = ModelFile(experiment_id=experiment_id, file_path=file_location)

@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Tex
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
-
+from sqlalchemy.sql import func
 
 class User(Base):
     __tablename__ = "users"
@@ -20,7 +20,8 @@ class Experiment(Base):
     name = Column(String, index=True)
     description = Column(Text)
     user_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=func.now())
+
     owner = relationship("User", back_populates="experiments")
     metrics = relationship("Metric", back_populates="experiment", cascade="all, delete")
     model = relationship("ModelFile", back_populates="experiment", uselist=False, cascade="all, delete")
@@ -35,7 +36,7 @@ class Metric(Base):
     precision = Column(Float)
     recall = Column(Float)
     loss = Column(Float)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=func.now())
     experiment = relationship("Experiment", back_populates="metrics")
 
 
