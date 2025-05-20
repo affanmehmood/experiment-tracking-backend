@@ -9,10 +9,13 @@ import os
 router = APIRouter(tags=["Dashboard"])
 
 
-@router.get("/experiments")
-def get_user_experiments(current_user: User = Depends(get_current_user)):
-    return current_user.experiments
-
+@router.get("/projects/{project_id}/experiments")
+def get_user_experiments(project_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    experiments = db.query(Experiment).filter(
+        Experiment.user_id == current_user.id,
+        Experiment.project_id == project_id
+    ).all()
+    return experiments
 
 @router.delete("/experiments/{experiment_id}")
 def delete_experiment(experiment_id: int, current_user: User = Depends(get_current_user),
@@ -27,10 +30,41 @@ def delete_experiment(experiment_id: int, current_user: User = Depends(get_curre
 
 @router.get("/experiments/{experiment_id}/metrics")
 def get_experiment_metrics(experiment_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    experiment = db.query(Experiment).filter_by(id=experiment_id, user_id=current_user.id).first()
+    experiment = db.query(Experiment).filter(Experiment.id == experiment_id, Experiment.user_id == current_user.id,).first()
     if not experiment:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(status_code=404, detail="Experiment not found in this project")
     return experiment.metrics
+
+
+@router.get("/experiments/{experiment_id}/metrics/last")
+def get_last_epoch_metrics(
+    experiment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    experiment = db.query(Experiment).filter(
+        Experiment.id == experiment_id,
+        Experiment.user_id == current_user.id
+    ).first()
+
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found in this project")
+
+    if not experiment.metrics or len(experiment.metrics) == 0:
+        raise HTTPException(status_code=404, detail="No metrics found for this experiment")
+
+    # Ensure we get the metric for the last epoch
+    last_metric = max(experiment.metrics, key=lambda m: m.epoch)
+    return {
+        "epoch": last_metric.epoch,
+        "accuracy": last_metric.accuracy,
+        "f1": 2 * (last_metric.precision * last_metric.recall) / (last_metric.precision + last_metric.recall + 1e-8),  # avoid division by zero
+        "precision": last_metric.precision,
+        "recall": last_metric.recall,
+        "loss": last_metric.loss,
+        "timestamp": last_metric.timestamp
+    }
+
 
 @router.get("/experiments/{experiment_id}/model")
 def download_model_file(

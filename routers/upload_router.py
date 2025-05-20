@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, Experiment, Metric, ModelFile
+from models import User, Experiment, Metric, ModelFile, Project
 import uuid, shutil, os
 
 
@@ -11,13 +11,23 @@ router = APIRouter(tags=["Uploads"])
 def get_user_by_api_key(db: Session, api_key: str):
     return db.query(User).filter(User.api_key == api_key).first()
 
-
-@router.post("/experiments")
-def create_experiment(name: str, description: str, x_api_key: str = Header(...), db: Session = Depends(get_db)):
+@router.post("/projects")
+def create_project(name: str, description: str, x_api_key: str = Header(...), db: Session = Depends(get_db)):
     user = get_user_by_api_key(db, x_api_key)
     if not user:
         raise HTTPException(status_code=403, detail="Invalid API Key")
-    experiment = Experiment(name=name, description=description, owner=user)
+    project = Project(name=name, description=description, owner=user)
+    db.add(project)
+    db.commit()
+    db.refresh(project)
+    return {"project_id": project.id}
+
+@router.post("/experiments")
+def create_experiment(project_id: int, name: str, description: str, x_api_key: str = Header(...), db: Session = Depends(get_db)):
+    user = get_user_by_api_key(db, x_api_key)
+    if not user:
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    experiment = Experiment(name=name, description=description, owner=user, project_id=project_id)
     db.add(experiment)
     db.commit()
     db.refresh(experiment)

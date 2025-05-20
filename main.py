@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine
-from routers import auth_router, experiments_router, upload_router, profile_router
+from routers import auth_router, experiments_router, upload_router, profile_router, projects_router
 
 
 # Initialize tables
@@ -24,3 +24,5 @@ app.include_router(auth_router.router)
 app.include_router(experiments_router.router)
 app.include_router(upload_router.router)
 app.include_router(profile_router.router)
+app.include_router(projects_router.router)
+
