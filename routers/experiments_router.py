@@ -85,6 +85,23 @@ def download_model_file(
         filename=os.path.basename(model_file.file_path),
         media_type='application/octet-stream'
     )
+
+@router.get("/experiments/{experiment_id}/resource-usage")
+def get_resource_usage(
+    experiment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    experiment = db.query(Experiment).filter(
+        Experiment.id == experiment_id,
+        Experiment.user_id == current_user.id
+    ).first()
+
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+
+    return experiment.resource_usages  # Assuming a relationship is defined
+
 # username: affan
 # password: pass
 # api_key: b9a89c8f-b364-4ae6-9987-3c083b48e9cc

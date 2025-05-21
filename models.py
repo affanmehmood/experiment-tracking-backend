@@ -61,3 +61,19 @@ class ModelFile(Base):
     file_path = Column(String)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
     experiment = relationship("Experiment", back_populates="model")
+
+class ResourceUsage(Base):
+    __tablename__ = "resource_usage"
+    id = Column(Integer, primary_key=True, index=True)
+    experiment_id = Column(Integer, ForeignKey("experiments.id"))
+    epoch = Column(Integer, index=True)
+
+    cpu_usage_percent = Column(Float)
+    memory_usage_mb = Column(Float)
+    gpu_usage_percent = Column(Float)
+    gpu_memory_usage_mb = Column(Float)
+    training_time_sec = Column(Float)
+
+    timestamp = Column(DateTime, default=func.now())
+
+    experiment = relationship("Experiment", backref="resource_usages")

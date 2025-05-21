@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header
+from fastapi import Query, APIRouter, Depends, HTTPException, UploadFile, File, Header
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User, Experiment, Metric, ModelFile, Project
+from models import User, Experiment, Metric, ModelFile, Project, ResourceUsage
 import shutil, os
 import random
 
@@ -65,6 +65,36 @@ def add_metric(experiment_id: int, epoch: int, accuracy: float, precision: float
     return {"status": "metric added"}
 
 
+@router.post("/resource-usage")
+def add_resource_usage(
+        experiment_id: int,
+        epoch: int,
+        cpu_percent: float = Query(None, alias="cpu_usage_percent"),
+        memory_used_mb: float = Query(None, alias="memory_usage_mb"),
+        gpu_percent: float = Query(None, alias="gpu_usage_percent"),
+        gpu_memory_used_mb: float = Query(None, alias="gpu_memory_usage_mb"),
+        training_time_sec: float = Query(None),
+        x_api_key: str = Header(...),
+        db: Session = Depends(get_db)
+):
+    user = get_user_by_api_key(db, x_api_key)
+
+    experiment = db.query(Experiment).filter_by(id=experiment_id, user_id=user.id).first()
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+
+    resource = ResourceUsage(
+        experiment_id=experiment_id,
+        epoch=epoch,
+        cpu_usage_percent=cpu_percent,
+        memory_usage_mb=memory_used_mb,
+        gpu_usage_percent=gpu_percent,
+        gpu_memory_usage_mb=gpu_memory_used_mb,
+        training_time_sec=training_time_sec
+    )
+    db.add(resource)
+    db.commit()
+    return {"status": "resource usage added"}
 @router.post("/upload_model")
 def upload_model(experiment_id: int, file: UploadFile = File(...), x_api_key: str = Header(...),
                  db: Session = Depends(get_db)):
