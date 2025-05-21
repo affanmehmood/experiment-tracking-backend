@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, Form, Request
 from sqlalchemy.orm import Session
 import uuid
 from database import get_db
 from models import User
-from auth import get_password_hash, verify_password, create_access_token
+from auth import get_password_hash, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 from fastapi.security import OAuth2PasswordRequestForm
-
+from fastapi.security import HTTPBearer
+from jose import JWTError, jwt
+security = HTTPBearer()
 router = APIRouter(tags=["Auth"])
 
 
@@ -28,3 +30,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=400, detail="Invalid credentials")
     access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/validate-token")
+def validate_token(token: str = Depends(security)):
+    try:
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        return {"valid": True}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token expired or invalid")
